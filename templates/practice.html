@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#174d40">
+  <link rel="icon" href="data:,">
+  <title>科研信息判断练习</title>
+  <style>
+    :root{color-scheme:light;--ink:#19332c;--muted:#526861;--main:#164f40;--line:#cddad3;--tint:#edf5ef;--paper:#fff;--ground:#f3f6f3;font:100%/1.67 "Inter","PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--ground);color:var(--ink)}
+    [hidden]{display:none!important}
+    button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #238d70;outline-offset:3px}
+    h1,h2,h3,p,blockquote,fieldset,ol{margin:0}h1,h2,h3{line-height:1.35}h1{font-size:clamp(1.7rem,5vw,2.3rem);letter-spacing:-.025em}
+    main{max-width:46rem;margin:clamp(1.25rem,6vh,3.7rem) auto;padding:0 clamp(.95rem,3vw,1.6rem) max(2.5rem,env(safe-area-inset-bottom))}
+    body.entry main{max-width:29rem;margin-top:clamp(2.2rem,15vh,9rem)}
+    .panel{background:var(--paper);border:1px solid var(--line);border-radius:1rem;padding:clamp(1.25rem,4vw,2.35rem);box-shadow:0 8px 32px #163c3008}
+    .entry-title{display:flex;align-items:center;gap:.78rem;margin:0 0 1.8rem}
+    .mark{width:2.2rem;height:2.2rem;border-radius:.55rem;background:var(--main);display:flex;align-items:flex-end;justify-content:center;gap:3px;padding:.48rem}
+    .mark i{width:4px;height:.78rem;background:#fff;border-radius:1px}.mark i:nth-child(2){height:1.1rem}.mark i:last-child{background:#9cd1ac;height:.9rem;transform:rotate(-10deg)}
+    .field{display:grid;gap:.3rem;margin-top:1rem;font-weight:650}
+    .field input{height:3.05rem;border:1px solid #95aea1;border-radius:.5rem;padding:0 .78rem;color:var(--ink);background:#fff;font-weight:400;min-width:0}
+    input::placeholder{color:#60756e}
+    .primary{border:1px solid var(--main);background:var(--main);color:#fff;min-height:2.9rem;border-radius:.55rem;font-weight:650;padding:.63rem 1.3rem}
+    .primary:hover{background:#0a4034}.login .primary{width:100%;margin-top:1.55rem}
+    .trail{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.7rem;color:var(--main);font-weight:650;font-size:.94rem}
+    .notice,.hint,.meta{color:var(--muted);font-size:.93rem}.notice{margin:.6rem 0 1.25rem}.meta{font-variant-numeric:tabular-nums}
+    .scene,.data,.claim,.actions,.feedback-item+.feedback-item{margin-top:1.25rem}
+    .section-title,.group legend{font-size:1.03rem;font-weight:700}.scene .section-title,.data .section-title,.claim .section-title{margin-bottom:.35rem}
+    .claim,.data{padding:1rem 1.15rem;border-radius:.5rem}.claim{background:var(--tint);border-left:3px solid #437b65}.data{border:1px solid var(--line);background:#fafcf9}
+    .group{border:0;margin-top:1.45rem;padding:0;min-width:0}.group legend{padding:0}.hint{margin-top:.25rem}
+    .options{display:grid;gap:.5rem;margin-top:.65rem}.option{display:flex;gap:.62rem;align-items:center;min-height:2.85rem;padding:.5rem .83rem;border:1px solid var(--line);border-radius:.5rem;cursor:pointer}
+    .option:hover,.option:has(input:checked){border-color:#47836b;background:var(--tint)}.option input{accent-color:var(--main);margin:0;width:1.02rem;height:1.02rem;flex:none}.confidence .options{grid-template-columns:repeat(3,minmax(0,1fr))}.confidence .option{justify-content:center}
+    .actions{display:flex;justify-content:flex-end;border-top:1px solid var(--line);padding-top:1rem}.feedback-item{padding-bottom:1.15rem;border-bottom:1px solid var(--line)}
+    .feedback-item h2{font-size:1.17rem;margin-bottom:.35rem}.feedback-item .reason{margin-top:.5rem}.feedback-item .result{font-weight:650;color:var(--main)}
+    .error{color:#9c352b}.error:empty{display:none}.error:not(:empty){margin-top:.65rem}h1:focus{outline:none}
+    @media(max-width:440px){.actions button{width:100%}.confidence .option{gap:.35rem;padding:.5rem .26rem}}
+    @media(max-width:310px){.confidence .options{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  </style>
+</head>
+<body class="entry">
+<main>
+  <section id="entry" class="panel login">
+    <div class="entry-title"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span><h1 tabindex="-1">练习</h1></div>
+    <form id="login" autocomplete="off">
+      <label class="field" for="studentName">姓名
+        <input id="studentName" type="text" placeholder="可用化名" required maxlength="80" autocomplete="off" spellcheck="false" enterkeyhint="next">
+      </label>
+      <label class="field" for="studentId">学号
+        <input id="studentId" type="text" placeholder="可用虚构学号" required maxlength="64" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="go">
+      </label>
+      <p id="login-error" class="error" role="alert"></p>
+      <button class="primary" type="submit">进入试答</button>
+    </form>
+  </section>
+  <section id="work" hidden></section>
+  <noscript>请启用浏览器的 JavaScript 以进行练习。</noscript>
+</main>
+<script>
+(() => {
+  "use strict";
+  const items = [
+    {
+      title:"循环水泵的用电量",
+      scenario:"一名学生用同一台泵比较两种运行设置，想在实验报告中说明节电幅度。",
+      claim:"在本次测试中，新设置的累计用电量比原设置少了25%。",
+      record:"试验记录注明，两种设置都在相同流量和扬程下运行4小时。原设置累计用电12.0 kWh，新设置累计用电9.0 kWh。",
+      supported:true,
+      reason:"在相同运行条件和时长下，节省的电量为12.0−9.0＝3.0 kWh。以原设置的12.0 kWh为基准，3.0÷12.0＝25%。说法限定在本次测试范围内。"
+    },
+    {
+      title:"窗边噪声的测量条件",
+      scenario:"某小组在一间教室试用窗缝密封条，记录安装前后的室内噪声。学生准备引用试验结论。",
+      claim:"试验已经证实，教室开窗通风时，安装密封条也能使室内噪声下降6 dB。",
+      record:"小组两次均关闭窗户，在相同声源设置和同一测点记录了10分钟的等效声级。安装前为58 dB，安装后为52 dB。记录中没有开窗工况。",
+      supported:false,
+      reason:"58−52＝6 dB，这个差值来自关窗工况。要判断开窗通风时的效果，还需要在开窗状态下对照测量。"
+    }
+  ];
+  const entry = document.getElementById("entry");
+  const login = document.getElementById("login");
+  const work = document.getElementById("work");
+  const nameField = document.getElementById("studentName");
+  const idField = document.getElementById("studentId");
+  const loginError = document.getElementById("login-error");
+  let index = 0;
+  let responses = [];
+
+  function element(tag, text, className) {
+    const n = document.createElement(tag);
+    if (text !== undefined && text !== null) n.textContent = text;
+    if (className) n.className = className;
+    return n;
+  }
+  function clearIdentity() {
+    login.reset();
+    nameField.value = "";
+    idField.value = "";
+    loginError.textContent = "";
+  }
+  function showEntry(focus) {
+    clearIdentity();
+    index = 0;
+    responses = [];
+    work.replaceChildren();
+    work.hidden = true;
+    entry.hidden = false;
+    document.body.classList.add("entry");
+    if (focus) nameField.focus();
+  }
+  function heading(title, part) {
+    work.replaceChildren();
+    const line = element("div", null, "trail");
+    line.append(element("span","科研信息判断练习"),element("span",part,"meta"));
+    const h = element("h1",title);
+    h.tabIndex = -1;
+    work.append(line,h,element("p","使用自编模拟材料。此次练习不计入正式研究，作答仅在当前页面内显示。","notice"));
+    h.focus({preventScroll:true});
+    window.scrollTo(0,0);
+  }
+  function section(title, text, style) {
+    const div = element("div",null,style);
+    div.append(element("h2",title,"section-title"),element("p",text));
+    return div;
+  }
+  function radioGroup(form, name, title, choices, hint) {
+    const field = element("fieldset",null,name === "confidence" ? "group confidence" : "group");
+    field.append(element("legend",title));
+    if(hint) field.append(element("p",hint,"hint"));
+    const opts = element("div",null,"options");
+    for (const [value,caption] of choices) {
+      const label = element("label",null,"option");
+      const radio = element("input");
+      radio.type = "radio";
+      radio.name = name;
+      radio.value = value;
+      radio.required = true;
+      label.append(radio,element("span",caption));
+      opts.append(label);
+    }
+    field.append(opts);
+    form.append(field);
+  }
+  function submitButton(form,label) {
+    const footer = element("div",null,"actions");
+    const next = element("button",label,"primary");
+    next.type = "submit";
+    footer.append(next);
+    form.append(footer);
+  }
+  function question(deciding) {
+    const item = items[index];
+    heading(item.title,"第 " + (index + 1) + " / " + items.length + " 题");
+    const form = element("form",null,"panel");
+    form.autocomplete = "off";
+    form.append(section("项目情境",item.scenario,"scene"),section("AI 给出的说法",item.claim,"claim"));
+    if (deciding) {
+      if (responses[index].lookup) form.append(section("试验记录",item.record,"data"));
+      radioGroup(form,"decision","记录能否支持这条说法？",[
+        ["yes","记录支持这条说法"],["no","记录不足以支持这条说法"]
+      ]);
+      radioGroup(form,"confidence","你对自己的判断有多大把握？",[50,60,70,80,90,100].map(v=>[String(v),v+"%"]),"50% 表示猜测，100% 表示完全有把握。");
+      submitButton(form,index + 1 === items.length ? "查看练习反馈" : "进入下一题");
+    } else {
+      radioGroup(form,"lookup","要先查看试验记录吗？",[
+        ["yes","查看试验记录"],["no","直接判断"]
+      ]);
+      submitButton(form,"继续作答");
+    }
+    form.addEventListener("submit",event=>{
+      event.preventDefault();
+      const selected = new FormData(form);
+      if (!deciding) {
+        responses[index] = {lookup:selected.get("lookup") === "yes"};
+        question(true);
+      } else {
+        responses[index].decision = selected.get("decision") === "yes";
+        responses[index].confidence = Number(selected.get("confidence"));
+        index++;
+        if (index === items.length) finish();
+        else question(false);
+      }
+    });
+    work.append(form);
+  }
+  function finish() {
+    clearIdentity();
+    heading("本次练习反馈","已完成");
+    const panel = element("div",null,"panel");
+    for (const [i,item] of items.entries()) {
+      const answer = responses[i];
+      const part = element("section",null,"feedback-item");
+      part.append(element("h2",(i+1)+" · "+item.title),
+        element("p",answer.decision === item.supported ? "判断正确" : "这一题需要再核对","result"),
+        element("p","你的选择 · "+(answer.decision?"记录支持":"证据不足")+"　把握 "+answer.confidence+"%","meta"),
+        element("p",item.record,"reason"),element("p",item.reason,"reason"));
+      panel.append(part);
+    }
+    const actions = element("div",null,"actions");
+    const retry = element("button","重新试答","primary");
+    retry.type = "button";
+    retry.addEventListener("click",()=>showEntry(true));
+    actions.append(retry);
+    panel.append(actions);
+    work.append(panel);
+    responses = [];
+  }
+  login.addEventListener("submit",event=>{
+    event.preventDefault();
+    if (!nameField.value.trim() || !idField.value.trim()) {
+      loginError.textContent = "请填好姓名与学号，可以使用虚构信息。";
+      (!nameField.value.trim()?nameField:idField).focus();
+      return;
+    }
+    clearIdentity();
+    entry.hidden = true;
+    work.hidden = false;
+    document.body.classList.remove("entry");
+    question(false);
+  });
+  window.addEventListener("pagehide",()=>showEntry(false));
+  window.addEventListener("pageshow",event=>{if(event.persisted) showEntry(false);});
+  showEntry(false);
+})();
+</script>
+</body>
+</html>

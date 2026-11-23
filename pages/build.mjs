@@ -1,5 +1,5 @@
 import {createHash} from "node:crypto";
-import {mkdir, readFile, writeFile} from "node:fs/promises";
+import {copyFile, mkdir, readFile, writeFile} from "node:fs/promises";
 import {resolve} from "node:path";
 
 const placeholder = "https://study-backend.invalid";
@@ -36,10 +36,14 @@ function buildAdminRedirect() {
   return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=${admin}"><title>研究者后台</title></head><body><main><a href="${admin}">打开研究者后台</a></main></body></html>`;
 }
 
-await mkdir(resolve(publicDir, "admin"), {recursive: true});
+await Promise.all([
+  mkdir(resolve(publicDir, "admin"), {recursive: true}),
+  mkdir(resolve(publicDir, "practice"), {recursive: true}),
+]);
 await Promise.all([
   writeFile(resolve(publicDir, "index.html"), await buildStudent()),
   writeFile(resolve(publicDir, "admin/index.html"), buildAdminRedirect()),
+  copyFile(new URL("practice.html", templates), resolve(publicDir, "practice/index.html")),
   writeFile(resolve(publicDir, ".nojekyll"), ""),
 ]);
 if (!apiOrigin) console.log("Setup page generated. Set STUDY_API_ORIGIN and rerun Publish study pages to enable collection.");
