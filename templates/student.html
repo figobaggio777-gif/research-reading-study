@@ -6,7 +6,8 @@
   'use strict';
   const $ = (sel, parent = document) => parent.querySelector(sel);
   const root = $('#content'), top = $('#topaction');
-  const batch = new URL(location.href).searchParams.get('batch');
+  let batch = new URL(location.href).searchParams.get('batch');
+  let pilotBatch = batch && history.state?.pilotBatch===batch ? batch : null;
   let state = null, busy = false;
   let bearer = '';
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
@@ -21,16 +22,30 @@
   function login(message='') {
     state=null;
     bearer='';
-    history.replaceState(null,'');
+    history.replaceState(pilotBatch && batch===pilotBatch ? {pilotBatch} : null,'');
     put(`<form class="login card" id="enter" aria-label="学生登录" autocomplete="off">
         <label for="studentName" class="label">姓名</label>
-        <input id="studentName" name="name" class="identity-field" type="text" autocomplete="off" spellcheck="false" enterkeyhint="next" maxlength="80" required>
+        <input id="studentName" name="name" class="identity-field" type="text" autocomplete="off" spellcheck="false" enterkeyhint="next" maxlength="80" ${pilotBatch?'placeholder="预试可用化名"':''} required>
         <label for="studentId" class="label">学号</label>
-        <input id="studentId" name="studentId" class="identity-field" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="go" maxlength="64" required>
+        <input id="studentId" name="studentId" class="identity-field" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="go" maxlength="64" ${pilotBatch?'placeholder="预试可用虚构学号"':''} required>
         <p id="err" class="error" role="alert"></p>
-        <button class="primary" type="submit">进入测试</button>
+        <button class="primary" type="submit">${pilotBatch?'进入完整预试':'进入测试'}</button>
       </form>`);
     error(message);
+  }
+  async function showEntry(message='') {
+    if(batch!==null){login(message);return;}
+    state=null;
+    bearer='';
+    pilotBatch=null;
+    history.replaceState(null,'');
+    put('<p class="statusbox" role="status">正在连接答题服务…</p>');
+    try {
+      pilotBatch=(await api('entry')).pilotBatch;
+      login(message);
+    } catch {
+      put('<section class="statusbox card"><p>暂时无法读取答题入口，请稍后重试。</p><button type="button" class="primary" data-act="retry-entry">重新连接</button></section>');
+    }
   }
   const sand=() => state.sandbox?'<p class="sand">当前为演练批次，作答与正式研究分开统计。</p>':'';
   function content() {
@@ -47,6 +62,7 @@
   function render(next) {
     state=next;
     const saved={studentSession:next.sessionTag};
+    if(pilotBatch) saved.pilotBatch=pilotBatch;
     if(apiOrigin) saved.studyBearer=bearer;
     history.replaceState(saved,'');
     if(state.phase==='complete'){put('<section class="complete">'+sand()+'<div class="card"><span class="kicker">作答完成</span><h1>已收到你的答卷</h1><p>感谢参与！如需申请撤回，请在参与说明约定的期限内联系研究团队。</p>'+(state.consent?.contact?'<p class="minor footnote">研究联系　'+esc(state.consent.contact)+'</p>':'')+(state.consent?.withdrawal?'<p class="minor">撤回方式与期限　'+esc(state.consent.withdrawal)+'</p>':'')+'<div class="actions"><button type="button" class="primary" data-act="leave">退出登录</button></div><p class="error" role="alert" id="err"></p></div></section>');return;}
@@ -82,12 +98,12 @@
     const waiting=apiOrigin&&form?.id==='enter'&&button?setTimeout(()=>{button.textContent='正在连接答题服务…';},5000):null;
     try{error('');await fn();}
     catch(err){
-      if(err.status===401 && state){login('登录已结束，请重新输入本人的姓名和学号。');}
-      else if(err.status===409 && state){try{const current=await api('state');if(current.sessionTag!==state.sessionTag){login('当前浏览器的登录已变更。请用本人的姓名和学号重新进入。');}else if(current.page!==state.page||current.phase!==state.phase){render(current);error('已同步到服务器上保存的进度。');}else{showError(err);}}catch{showError(err);}}
+      if(err.status===401 && state){await showEntry('登录已结束，请使用上次的姓名和学号。');}
+      else if(err.status===409 && state){try{const current=await api('state');if(current.sessionTag!==state.sessionTag){await showEntry('当前浏览器的登录已变更。请使用上次的姓名和学号重新进入。');}else if(current.page!==state.page||current.phase!==state.phase){render(current);error('已同步到服务器上保存的进度。');}else{showError(err);}}catch{showError(err);}}
       else{showError(err);}
     } finally{clearTimeout(waiting);busy=false;if(button?.isConnected){button.disabled=false;button.textContent=original;}}
   }
-  async function leave(){await api('logout',withTag({}));login();}
+  async function leave(){await api('logout',withTag({}));await showEntry();}
   document.addEventListener('submit',event=>{
     const form=event.target;if(!root.contains(form))return;
     event.preventDefault();
@@ -96,8 +112,15 @@
       const values=new FormData(form);
       if(form.id==='enter'){
         const identity={name:values.get('name').trim(),studentId:values.get('studentId').trim()};
-        if(batch!==null)identity.batch=batch;
-        render(await api('login',identity));
+        if(batch!==null || pilotBatch!==null)identity.batch=batch ?? pilotBatch;
+        const next=await api('login',identity);
+        if(pilotBatch && batch===null && next.sandbox) {
+          batch=pilotBatch;
+          const scoped=new URL(location.href);
+          scoped.searchParams.set('batch',batch);
+          history.replaceState({pilotBatch},'',scoped.href);
+        }
+        render(next);
         return;
       }
       if(form.id==='answers'){const answers={};for(const f of state.fields||[])answers[f.name]=Number(values.get(f.name));render(await api('next',withTag({page:state.page,answers})));return;}
@@ -106,6 +129,7 @@
   document.addEventListener('click',e=>{
     const act=e.target.closest('[data-act]')?.dataset.act;
     if(!act||busy)return;
+    if(act==='retry-entry'){handle(()=>showEntry());return;}
     if(act==='leave') {handle(leave);return;}
     if(act==='cancel'){const panel=$('.pause');if(panel)panel.remove();$('#topaction button')?.focus();return;}
     if(act==='pause'){
@@ -116,17 +140,17 @@
   });
   async function boot(){
     const tag=history.state?.studentSession;
-    if(!tag){login();return;}
+    if(!tag){await showEntry();return;}
     if(apiOrigin){
       const token=history.state?.studyBearer;
-      if(!/^[a-f0-9]{64}$/.test(token||'')){login();return;}
+      if(!/^[a-f0-9]{64}$/.test(token||'')){await showEntry();return;}
       bearer=token;
     }
     try{
       const current=await api('state');
       if(current.sessionTag===tag){render(current);return;}
-      login('当前浏览器的登录已变更。请用本人的姓名和学号重新进入。');
-    }catch(err){login(err.status===401?'登录已结束，请重新输入本人的姓名和学号。':'若已有进度，请用本人的姓名和学号重新进入。');}
+      await showEntry('当前浏览器的登录已变更。请使用上次的姓名和学号重新进入。');
+    }catch(err){await showEntry(err.status===401?'登录已结束，请使用上次的姓名和学号。':'若已有进度，请使用上次的姓名和学号重新进入。');}
   }
   boot();
 })("https://study-backend.invalid");</script></body></html>
